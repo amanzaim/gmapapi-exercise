@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+       /* Set the size of the div element that contains the map */
+      #map {
+        height: 500px;
+        width: 800px;
+       }
+    </style>
+  </head>
+  <body>
+    <!--The div elements for the map and message -->
+    <div id="map"></div>
+    <div id="msg"></div>
+    <script>
+      // Initialize and add the map
+      var map;
+
+      // function to calculate distance between the two points
+      function haversine_distance(mk1, mk2) {
+        var R = 3958.8; // Radius of the Earth in miles
+        var rlat1 = mk1.position.lat() * (Math.PI/180); // Convert degrees to radians
+        var rlat2 = mk2.position.lat() * (Math.PI/180); // Convert degrees to radians
+        var difflat = rlat2-rlat1; // Radian difference (latitudes)
+        var difflon = (mk2.position.lng()-mk1.position.lng()) * (Math.PI/180); // Radian difference (longitudes)
+
+        var d = 2 * R * Math.asin(Math.sqrt(Math.sin(difflat/2)*Math.sin(difflat/2)+Math.cos(rlat1)*Math.cos(rlat2)*Math.sin(difflon/2)*Math.sin(difflon/2)));
+        return d;
+      }
+
+      function initMap() {
+
+        // The map location
+        const center = {lat: 3.0821, lng: 101.5389};
+        const options = {zoom: 15, center: center};
+        map = new google.maps.Map(
+        document.getElementById('map'), options);
+
+        // Locations of landmarks / markers
+        const msu = {lat: 3.0811, lng: 101.5510};
+        const stadium = {lat: 3.0801, lng: 101.5471};
+
+
+        // Creating the markers for MSU and Stadium Shah Alam
+        var mk1 = new google.maps.Marker({position: msu, map: map});
+        var mk2 = new google.maps.Marker({position: stadium, map: map});
+
+        // Creating the straight line from Point A to Point B
+        var line = new google.maps.Polyline({path: [msu, stadium], map: map});
+
+        let directionsService = new google.maps.DirectionsService();
+        let directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map); // Existing map object displays directions
+        // Create route from existing points used for markers
+        const route = {
+          origin: msu,
+          destination: stadium,
+          travelMode: 'DRIVING'
+        }
+
+        //creating the shortest route using maps api
+        directionsService.route(route,
+          function(response, status) { // anonymous function to capture directions
+            if (status !== 'OK') {
+              window.alert('Directions request failed due to ' + status);
+              return;
+            } else {
+              directionsRenderer.setDirections(response); // Add route to the map
+              var directionsData = response.routes[0].legs[0]; // Get data about the mapped route
+              if (!directionsData) {
+                window.alert('Directions request failed');
+                return;
+              }
+              // output the distance of the shortest route using innerHTML
+              else {
+                document.getElementById('msg').innerHTML += " Driving distance is " + directionsData.distance.text + " (" + directionsData.duration.text + ").";
+              }
+            }
+          });
+
+    }
+
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=ADDYOURKEYHERE&callback=initMap">
+    </script>
+  </body>
+</html>
